@@ -34,7 +34,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     protected Location mLastLocation;
-    int a;
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
 
