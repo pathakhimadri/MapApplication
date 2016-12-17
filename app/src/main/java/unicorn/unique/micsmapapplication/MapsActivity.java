@@ -24,18 +24,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -49,6 +41,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationRequest mLocationRequest;
     AsyncTaskGetData stations;
     AsyncTaskGetData velohStations;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,11 +104,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng latlng;
         for(int i =0; i<stations.stations.size(); i++){
             latlng = stations.stations.get(i);
-            mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.busstation)).anchor(0.5f,0.5f));
+            mMap.addMarker(new MarkerOptions()
+                    .position(latlng)
+                    .icon(BitmapDescriptorFactory
+                            .fromResource(R.mipmap.busstation)
+                    )
+                    .anchor(0.5f,0.5f));
+
         }
         for(int i = 0; i< velohStations.stations.size(); i++){
             latlng = velohStations.stations.get(i);
-            mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.velohmarker)).anchor(0.5f,0.5f));
+            mMap.addMarker(
+                    new MarkerOptions().position(latlng)
+                    .icon(BitmapDescriptorFactory
+                        .fromResource(R.mipmap.velohmarker)
+                    )
+                    .anchor(0.5f,0.5f)
+            );
         }
     }
 
@@ -136,12 +141,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 //
 //        //move map camera
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 1));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
 //        //stop location updates
         if (mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            drawMarkersForLocation();
         }
-
     }
 
     //Method of GoogleApiClient.OnConnectionFailedListener
