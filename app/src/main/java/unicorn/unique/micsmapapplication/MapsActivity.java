@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -41,6 +42,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationRequest mLocationRequest;
     AsyncTaskGetData stations;
     AsyncTaskGetData velohStations;
+    int zoomLevel =16;
 
 
     @Override
@@ -93,27 +95,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(mLastLocation != null){
                 double lat = mLastLocation.getLatitude();
                 double lng = mLastLocation.getLongitude();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 16));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), zoomLevel));
+                zoomLevel = 0;
                 drawMarkersForLocation();
             }
 
         }
     }
 
+    float distToClosestBus = 10000000;
+    public LatLng closestBus;
+    double distToClosestVeloh = 10000000;
+    public LatLng closestVeloh;
+    float[] results = new float[1];
+
     private void drawMarkersForLocation() {
+        //Draw markers for location being called
+        Log.d("Markers", "draw markers being called");
         LatLng latlng;
+        LatLng tempLastLocation;
         for(int i =0; i<stations.stations.size(); i++){
             latlng = stations.stations.get(i);
+            if( mLastLocation !=null){
+                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), latlng.latitude, latlng.longitude, results);
+                if(results[0]<distToClosestBus){
+                    distToClosestBus = results[0];
+                    closestBus = latlng;
+                }
+            }
+
             mMap.addMarker(new MarkerOptions()
                     .position(latlng)
                     .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.busstation)
+                            .fromResource(R.mipmap.stationinactive)
                     )
                     .anchor(0.5f,0.5f));
 
         }
         for(int i = 0; i< velohStations.stations.size(); i++){
             latlng = velohStations.stations.get(i);
+            if( mLastLocation!= null) {
+                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), latlng.latitude, latlng.longitude, results);
+                if(results[0]<distToClosestVeloh){
+                    distToClosestVeloh = results[0];
+                    closestVeloh = latlng;
+                    Log.d("New Closest Veloh", closestVeloh.toString());
+                }
+            }
+
             mMap.addMarker(
                     new MarkerOptions().position(latlng)
                     .icon(BitmapDescriptorFactory
@@ -133,8 +162,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Method of LocationListener
     @Override
     public void onLocationChanged(Location location) {
-
-        //mLastLocation = location;
+    Log.d("LOCATION", "location changed");
+        mLastLocation = location;
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
         }
@@ -142,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //
 //        //move map camera
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+
 //        //stop location updates
         if (mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
@@ -160,6 +190,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    public void findClosest(View view) {
+        mMap.addMarker(
+                new MarkerOptions().position(closestBus)
+                        .icon(BitmapDescriptorFactory
+                                .fromResource(R.mipmap.stationactive)
+                        )
+                        .anchor(0.5f,0.5f)
 
-
+        );
+        mMap.addMarker(
+                new MarkerOptions().position(closestVeloh)
+                        .icon(BitmapDescriptorFactory
+                                .fromResource(R.mipmap.velohactive)
+                        )
+                        .anchor(0.5f,0.5f)
+        );
+    }
 }
