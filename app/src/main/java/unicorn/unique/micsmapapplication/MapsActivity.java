@@ -3,6 +3,7 @@ package unicorn.unique.micsmapapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -42,8 +43,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationRequest mLocationRequest;
     AsyncTaskGetData stations;
     AsyncTaskGetData velohStations;
-    int zoomLevel =16;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +54,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         //The list of all bus stations.
         stations = (AsyncTaskGetData) new AsyncTaskGetData().execute("https://api.tfl.lu/stations");
+        //List of all veloh stations. I used pastebin instead of providing link from jcDecaux with the API key
+        // because the API there provides JSON data with latitude as lat and longitude as lng. Since the
+        // asyncTaskGetData class works with the names latitude and longitude it seems line a much easier task
+        //for now.
         velohStations = (AsyncTaskGetData) new AsyncTaskGetData().execute("http://pastebin.com/raw/S5w1nvxw");
     }
 
@@ -95,8 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(mLastLocation != null){
                 double lat = mLastLocation.getLatitude();
                 double lng = mLastLocation.getLongitude();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), zoomLevel));
-                zoomLevel = 0;
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 16));
                 drawMarkersForLocation();
             }
 
@@ -168,14 +170,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCurrLocationMarker.remove();
         }
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//
+
 //        //move map camera
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+         mMap.clear();
+         drawMarkersForLocation();
 
 //        //stop location updates
         if (mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            drawMarkersForLocation();
+
         }
     }
 
