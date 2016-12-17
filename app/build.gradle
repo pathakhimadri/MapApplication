@@ -28,3 +28,4 @@ dependencies {
     compile 'com.google.android.gms:play-services:9.0.2'
     testCompile 'junit:junit:4.12'
 }
+

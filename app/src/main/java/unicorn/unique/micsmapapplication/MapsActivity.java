@@ -6,10 +6,12 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -26,6 +28,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -36,6 +47,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected Location mLastLocation;
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
+    AsyncTaskGetData stations;
+    AsyncTaskGetData velohStations;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +58,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        //The list of all bus stations.
+        stations = (AsyncTaskGetData) new AsyncTaskGetData().execute("https://api.tfl.lu/stations");
+        velohStations = (AsyncTaskGetData) new AsyncTaskGetData().execute("http://pastebin.com/raw/S5w1nvxw");
     }
 
     //Implement method of OnMapReady Callback
@@ -77,34 +92,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        }
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if(mLastLocation != null){
+                double lat = mLastLocation.getLatitude();
+                double lng = mLastLocation.getLongitude();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 16));
+                drawMarkersForLocation();
+            }
 
+        }
+    }
+
+    private void drawMarkersForLocation() {
+        LatLng latlng;
+        for(int i =0; i<stations.stations.size(); i++){
+            latlng = stations.stations.get(i);
+            mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.busstation)).anchor(0.5f,0.5f));
+        }
+        for(int i = 0; i< velohStations.stations.size(); i++){
+            latlng = velohStations.stations.get(i);
+            mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.velohmarker)).anchor(0.5f,0.5f));
+        }
     }
 
     //Method of GoogleApiClient.ConnectionCallbacks
     @Override
     public void onConnectionSuspended(int i) {
+        mGoogleApiClient.connect();
     }
 
     //Method of LocationListener
     @Override
     public void onLocationChanged(Location location) {
 
-        mLastLocation = location;
+        //mLastLocation = location;
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
         }
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        //move map camera
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
-
-        //stop location updates
+//
+//        //move map camera
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 1));
+//        //stop location updates
         if (mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
@@ -120,4 +153,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
     }
+
+
+
+
 }
