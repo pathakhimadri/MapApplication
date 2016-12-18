@@ -109,7 +109,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             permissionsCheck();
             mMap.setMyLocationEnabled(true);
         } else {
-            Log.w("Error: ", "Permission not granted");
+            permissionsCheck();
+            mMap.setMyLocationEnabled(true);
         }
     }
 
