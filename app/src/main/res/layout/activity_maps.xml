@@ -22,7 +22,7 @@
         tools:layout="@layout/activity_maps">
 
 
-         </fragment>
+    </fragment>
     <RelativeLayout
         android:id="@+id/belowlayout"
         android:layout_width="wrap_content"
@@ -30,12 +30,19 @@
         android:layout_alignParentBottom="true"
         android:orientation="horizontal" >
 
+        <SeekBar android:id="@+id/distanceSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max = "10"
+            />
+
         <Button
             android:id="@+id/button7"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_gravity="right|center_horizontal"
+            android:layout_margin="50dp"
             android:background="@color/colorAccent"
             android:layout_marginBottom="14dp"
             android:layout_marginTop="14dp"

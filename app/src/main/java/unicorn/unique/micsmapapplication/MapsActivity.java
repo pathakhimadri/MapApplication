@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -35,6 +37,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -50,12 +54,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     AsyncTaskGetData stations;
     AsyncTaskGetData velohStations;
     ArrayList<LatLng> stationsToDisplay = new ArrayList<>();
+    ArrayList<stationProperties> busListMaxDist = new ArrayList<>();
     ArrayList<LatLng> velohStationsToDisplay = new ArrayList<>();
+    ArrayList<stationProperties> velohListMaxDist = new ArrayList<>();
     CameraPosition cameraPosition;
-    float distToClosestBus = 10000000;
-    double distToClosestVeloh = 10000000;
-    float[] results = new float[1];
     private GoogleMap mMap;
+    SeekBar seekBar;
+    Button buttonForClosest;
+    int compareDistance;
 
     public static void clearCache(Context context){
         try {
@@ -133,7 +139,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED) {
+        seekBarFunctions();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             if (mLastLocation != null) {
@@ -166,8 +173,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 velohStationsToDisplay.add(position);
                             }
                         }
-
-                        drawMarkersForLocation();
+                        drawMarkersForBusStations();
+                        drawMarkersForVelohStation();
 
                     }
                 });
@@ -175,8 +182,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 permissionsCheck();
                 mMap.setMyLocationEnabled(true);
-            }
-            } else {
                 Location newLocation = new Location("");
                 LatLng latlng = new LatLng(49.610456, 6.130668);
                 newLocation.setLatitude(latlng.latitude);
@@ -186,36 +191,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         }
+    }
 
-    private void drawMarkersForLocation() {
-        //Draw markers for location being called
-        Log.d("Markers", "draw markers being called");
+    private void drawMarkersForBusStations() {
+        //float distToClosestBus = 10000000;
+        float[] results = new float[1];
+        //Log.d("Markers", "draw markers for Bus being called");
         LatLng latlng;
         for (int i = 0; i < stationsToDisplay.size(); i++) {
             latlng = stationsToDisplay.get(i);
             if (mLastLocation != null) {
                 Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), latlng.latitude, latlng.longitude, results);
-                if (results[0] < distToClosestBus) {
-                    distToClosestBus = results[0];
-                    closestBus = latlng;
+                if (results[0] < 250) {
+                    busListMaxDist.add(new stationProperties(latlng, results[0]));
                 }
             }
-
             mMap.addMarker(new MarkerOptions()
                     .position(latlng)
                     .icon(BitmapDescriptorFactory
                             .fromResource(R.mipmap.stationinactive)
                     )
                     .anchor(0.5f, 0.5f));
-
         }
+        Collections.sort(busListMaxDist, new Comparator<stationProperties>() {
+            @Override
+            public int compare(stationProperties o1, stationProperties o2) {
+                return o1.distance.compareTo(o2.distance);
+            }
+        });
+    }
+
+    private void drawMarkersForVelohStation() {
+        //double distToClosestVeloh = 10000000;
+        float[] results = new float[1];
+        LatLng latlng;
         for (int i = 0; i < velohStationsToDisplay.size(); i++) {
             latlng = velohStationsToDisplay.get(i);
             if (mLastLocation != null) {
                 Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),latlng.latitude,latlng.longitude,results);
-                if (results[0] < distToClosestVeloh) {
-                    distToClosestVeloh = results[0];
-                    closestVeloh = latlng;
+                if (results[0] < 250) {
+                    velohListMaxDist.add(new stationProperties(latlng, results[0]));
                     //Log.d("New Closest Veloh", closestVeloh.toString());
                 }
             }
@@ -227,6 +242,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .anchor(0.5f, 0.5f)
             );
         }
+        Collections.sort(velohListMaxDist, new Comparator<stationProperties>() {
+            @Override
+            public int compare(stationProperties o1, stationProperties o2) {
+                return o1.distance.compareTo(o2.distance);
+            }
+        });
     }
 
     //Method of GoogleApiClient.ConnectionCallbacks
@@ -281,23 +302,74 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void findClosest(View view) {
-        if (closestBus!=null & closestVeloh!=null) {
-            mMap.addMarker(
-                    new MarkerOptions().position(closestBus)
-                            .icon(BitmapDescriptorFactory
-                                    .fromResource(R.mipmap.stationactive)
-                            )
-                            .anchor(0.5f,0.5f)
-
-            );
-            mMap.addMarker(
-                    new MarkerOptions().position(closestVeloh)
-                            .icon(BitmapDescriptorFactory
-                                    .fromResource(R.mipmap.velohactive)
-                            )
-                            .anchor(0.5f,0.5f)
-            );
+        for (int i = 0; i< stationsToDisplay.size(); i++) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(stationsToDisplay.get(i))
+                    .icon(BitmapDescriptorFactory
+                            .fromResource(R.mipmap.stationinactive)
+                    )
+                    .anchor(0.5f, 0.5f));
         }
+
+        if (busListMaxDist.size()!=0) {
+            for (int i = 0; i < busListMaxDist.size(); i++) {
+                if (busListMaxDist.get(i).distance <= compareDistance*25) {
+                    mMap.addMarker(
+                            new MarkerOptions().position(busListMaxDist.get(i).latLng)
+                                    .icon(BitmapDescriptorFactory
+                                            .fromResource(R.mipmap.stationactive)
+                                    )
+                                    .anchor(0.5f, 0.5f)
+
+                    );
+                } else {
+                    mMap.addMarker(
+                            new MarkerOptions().position(busListMaxDist.get(0).latLng)
+                                    .icon(BitmapDescriptorFactory
+                                            .fromResource(R.mipmap.stationactive)
+                                    )
+                                    .anchor(0.5f, 0.5f)
+
+                    );
+                }
+            }
+        }
+        //velohWithinMaxDist();
+
+    }
+    private void velohWithinMaxDist(){
+        for (int i = 0; i< velohStationsToDisplay.size(); i++) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(velohStationsToDisplay.get(i))
+                    .icon(BitmapDescriptorFactory
+                            .fromResource(R.mipmap.velohmarker)
+                    )
+                    .anchor(0.5f, 0.5f));
+        }
+        if (velohListMaxDist.size()!=0) {
+            for (int i = 0; i < velohListMaxDist.size(); i++) {
+                if (velohListMaxDist.get(i).distance <= compareDistance*25) {
+                    mMap.addMarker(
+                            new MarkerOptions().position(velohListMaxDist.get(i).latLng)
+                                    .icon(BitmapDescriptorFactory
+                                            .fromResource(R.mipmap.velohactive)
+                                    )
+                                    .anchor(0.5f, 0.5f)
+
+                    );
+                } else {
+                    mMap.addMarker(
+                            new MarkerOptions().position(velohListMaxDist.get(0).latLng)
+                                    .icon(BitmapDescriptorFactory
+                                            .fromResource(R.mipmap.velohactive)
+                                    )
+                                    .anchor(0.5f, 0.5f)
+
+                    );
+                }
+            }
+        }
+
     }
 
     @Override
@@ -315,5 +387,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onCameraChange(CameraPosition cameraPosition) {
 
     }
+
+    private void seekBarFunctions(){
+        seekBar = (SeekBar) findViewById(R.id.distanceSeek);
+        buttonForClosest = (Button) findViewById(R.id.button7);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                compareDistance = progress;
+                if (progress != 0) {
+                    buttonForClosest.setText("Find stations within "+Integer.toString(progress*25) +" m");
+                } else{
+                    buttonForClosest.setText("Find closest station");
+                }
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+
 }
 
