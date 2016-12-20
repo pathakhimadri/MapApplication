@@ -78,5 +78,8 @@ public class AsyncTaskGetData extends AsyncTask<String, String, String> {
         super.onPostExecute(fetchedData);
     }
 
+    private void getBusStationsData(){
+
+    }
 
 }
