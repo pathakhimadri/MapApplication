@@ -334,7 +334,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         }
-        //velohWithinMaxDist();
+        velohWithinMaxDist();
 
     }
     private void velohWithinMaxDist(){
