@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 public class AsyncTaskGetVeloh extends AsyncTask<String,String,String>{
 
-    public ArrayList<LatLng> velohStations = new ArrayList<>();
+    public ArrayList<velohProperties> velohStations = new ArrayList<>();
 
     @Override
     protected String doInBackground(String... params) {
@@ -51,8 +51,11 @@ public class AsyncTaskGetVeloh extends AsyncTask<String,String,String>{
                     JSONObject locationObject = parentObject.getJSONObject("position");
                     double longitude = Double.parseDouble(locationObject.getString("lng"));
                     double latitude = Double.parseDouble(locationObject.getString("lat"));
+                    String name = parentObject.getString("name");
+                    int availableBikes = Integer.parseInt(parentObject.getString("available_bikes"));
+                    int availableStands = Integer.parseInt(parentObject.getString("available_bike_stands"));
 
-                    velohStations.add(new LatLng(latitude, longitude));
+                    velohStations.add(new velohProperties(new LatLng(latitude, longitude), name, availableBikes, availableStands,0));
                 }
                 //We now return the complete JSON data fetched from the URL.
                 //return buffer.toString();

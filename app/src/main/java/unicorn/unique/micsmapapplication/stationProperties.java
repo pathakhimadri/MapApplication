@@ -15,4 +15,5 @@ public class stationProperties {
         this.latLng = latLng;
         this.distance = distance;
     }
+
 }
