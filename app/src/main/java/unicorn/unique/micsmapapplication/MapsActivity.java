@@ -53,7 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
     AsyncTaskGetData stations;
-    AsyncTaskGetData velohStations;
+    AsyncTaskGetVeloh velohStations;
     ArrayList<stationProperties> stationsToDisplay = new ArrayList<>();
     ArrayList<stationProperties> busListMaxDist = new ArrayList<>();
     ArrayList<LatLng> velohStationsToDisplay = new ArrayList<>();
@@ -107,7 +107,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // because the API there provides JSON data with latitude as lat and longitude as lng. Since the
         // asyncTaskGetData class works with the names latitude and longitude it seems line a much easier task
         //for now.
-        velohStations = (AsyncTaskGetData) new AsyncTaskGetData().execute("http://pastebin.com/raw/S5w1nvxw");
+        velohStations = (AsyncTaskGetVeloh) new AsyncTaskGetVeloh().execute("https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47");
     }
 
     //Implement method of OnMapReady Callback
@@ -180,8 +180,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
 
                         }
-                        for (int i = 0; i < velohStations.stations.size(); i++) {
-                            LatLng position = velohStations.stations.get(i);
+                        for (int i = 0; i < velohStations.velohStations.size(); i++) {
+                            LatLng position = velohStations.velohStations.get(i);
                             if (bounds.contains(position)) {
                                 velohStationsToDisplay.add(position);
                             }
@@ -327,7 +327,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         CircleOptions circleOptions = new CircleOptions()
                 .center(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
                 .radius(compareDistance*25)
-                .fillColor(0xFFBBDEFB)
+                .fillColor(0x96BBDEFB)
                 .strokeWidth(5)
                 .strokeColor(0xFF64B5F6)
                 ;
