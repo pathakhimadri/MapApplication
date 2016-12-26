@@ -144,6 +144,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             permissionsCheck();
             mMap.setMyLocationEnabled(true);
         }
+        mMap.setOnMarkerClickListener(this);
     }
 
     //Permissions check
@@ -567,7 +568,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        return false;
+        String id = marker.getId();
+        int markerId = mHashMap.get(id);
+        Log.d("Station id", Integer.valueOf(markerId).toString());
+        return true;
     }
 }
 
