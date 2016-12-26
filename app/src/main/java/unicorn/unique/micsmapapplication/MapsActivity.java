@@ -181,6 +181,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         LatLngBounds bounds = projection.getVisibleRegion().latLngBounds;
                         for (int i = 0; i < stations.stations.size(); i++) {
                             LatLng position = stations.stations.get(i).latLng;
+                            //Toast
                             if (bounds.contains(position)) {
                                 Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
                                 stationsToDisplay.add(new stationProperties(position, results[0]));
