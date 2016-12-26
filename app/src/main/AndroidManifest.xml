@@ -51,6 +51,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".PopUp"
+            android:theme="@style/AppTheme.PopupTheme"></activity>
     </application>
 
 </manifest>

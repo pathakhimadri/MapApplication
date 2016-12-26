@@ -3,6 +3,7 @@ package unicorn.unique.micsmapapplication;
 import java.util.HashMap;
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -570,7 +571,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onMarkerClick(Marker marker) {
         String id = marker.getId();
         int markerId = mHashMap.get(id);
-        Log.d("Station id", Integer.valueOf(markerId).toString());
+
+        startActivity(new Intent(MapsActivity.this, PopUp.class));
         return true;
     }
 }
