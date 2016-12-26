@@ -27,7 +27,7 @@ import java.util.ArrayList;
 // This class is used to fetch data from a URL.
 public class AsyncTaskGetData extends AsyncTask<String, String, String> {
 
-    public ArrayList<LatLng> stations = new ArrayList<>();
+    public ArrayList<stationLocations> stations = new ArrayList<>();
 
     @Override
     protected String doInBackground(String... params) {
@@ -52,10 +52,13 @@ public class AsyncTaskGetData extends AsyncTask<String, String, String> {
                 JSONArray parentArray = new JSONArray(JSONData);
 
                 for(int i =0; i< parentArray.length(); i++) {
+
                     JSONObject parentObject = parentArray.getJSONObject(i);
                     double longitude = Double.parseDouble(parentObject.getString("longitude"));
                     double latitude = Double.parseDouble(parentObject.getString("latitude"));
-                    stations.add(new LatLng(latitude, longitude));
+                    int id = Integer.parseInt(parentObject.getString("id"));
+                    stations.add(new stationLocations(new  LatLng(latitude, longitude),0.0f , id));
+
                 }
                 //We now return the complete JSON data fetched from the URL.
                 //return buffer.toString();
@@ -76,10 +79,6 @@ public class AsyncTaskGetData extends AsyncTask<String, String, String> {
     @Override
     protected void onPostExecute(String fetchedData) {
         super.onPostExecute(fetchedData);
-    }
-
-    private void getBusStationsData(){
-
     }
 
 }

@@ -27,27 +27,27 @@
             >
             <View android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.8"
+            android:layout_weight="0.75"
             android:background="#00ffffff"></View>
         <RelativeLayout
             android:id="@+id/belowlayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.2"
+            android:layout_weight="0.25"
             android:background="#73ffffff"
             android:orientation="vertical">
 
             <SeekBar android:id="@+id/distanceSeek"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="20dp"
                 android:layout_alignParentTop="true"
-                android:layout_margin="20dp"
+                android:layout_margin="10dp"
                 android:max = "10"
                 />
 
             <RelativeLayout
                 android:orientation="horizontal"
-                android:layout_height="wrap_content"
+                android:layout_height="70dp"
                 android:layout_width="match_parent"
                 android:layout_alignParentBottom="true"
                 android:gravity="center"
@@ -61,7 +61,7 @@
                     android:layout_gravity="center"
                     android:background="@color/colorAccent"
                     android:layout_marginRight="50dp"
-                    android:layout_marginBottom="15dp"
+                    android:layout_marginBottom="5dp"
                     android:text="Find Closest Station"
                     android:onClick="findClosest"
                     android:textColor="#ffffff" />

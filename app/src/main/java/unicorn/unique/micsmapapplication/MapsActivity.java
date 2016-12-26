@@ -48,25 +48,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener, GoogleMap.OnCameraChangeListener {
 
-    protected Location mLastLocation;
-    GoogleApiClient mGoogleApiClient;
+
+    private GoogleMap mMap;
+    protected Location mLastLocation; //my Last location, used for onLocationChanged
+    GoogleApiClient mGoogleApiClient; // API client
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
+    //Getting the list of stations upon start-up.
     AsyncTaskGetData stations;
     AsyncTaskGetVeloh velohStations;
+    //List that fills according to the camera bounds
     ArrayList<stationProperties> stationsToDisplay = new ArrayList<>();
-    ArrayList<stationProperties> busListMaxDist = new ArrayList<>();
     ArrayList<velohProperties> velohStationsToDisplay = new ArrayList<>();
+    //List of highlighted bus stops based on the slider.
+    ArrayList<stationProperties> busListMaxDist = new ArrayList<>();
     ArrayList<velohProperties> velohListMaxDist = new ArrayList<>();
+
     CameraPosition cameraPosition;
-    private GoogleMap mMap;
+
+    //UI elements.
     SeekBar seekBar;
     Button buttonForClosest;
     Button buttonForVeloh;
-    int compareDistance;
+
     Circle radiusOfSearch;
     LatLng closestStation = null;
     LatLng closestVeloh;
+
+    int compareDistance;
     float closestStationDistance;
     float closestVelohDistance;
 
@@ -167,12 +176,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         if(radiusOfSearch != null) {
                             radiusOfSearch.remove();
                         }
-                        //mMap.clear();
                         float[] results = new float[1];
                         Projection projection = mMap.getProjection();
                         LatLngBounds bounds = projection.getVisibleRegion().latLngBounds;
                         for (int i = 0; i < stations.stations.size(); i++) {
-                            LatLng position = stations.stations.get(i);
+                            LatLng position = stations.stations.get(i).latLng;
                             if (bounds.contains(position)) {
                                 Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
                                 stationsToDisplay.add(new stationProperties(position, results[0]));
@@ -218,7 +226,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void drawMarkersForBusStations() {
-
+        mMap.clear();
         float[] results = new float[1];
         //Log.d("Markers", "draw markers for Bus being called");
         LatLng latlng;
@@ -247,6 +255,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void drawMarkersForVelohStation() {
+        //velohStationsToDisplay.clear();
         //double distToClosestVeloh = 10000000;
         float[] results = new float[1];
         LatLng latlng;
@@ -340,6 +349,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void findClosest(View view) {
+        mMap.clear();
         drawCircle();
         for (int i = 0; i< velohStationsToDisplay.size(); i++) {
             velohProperties veloh = velohStationsToDisplay.get(i);
@@ -373,6 +383,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     );
                 } else{
+                    Context context = getApplicationContext();
+                    CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
+                    int duration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
                     mMap.addMarker(
                             new MarkerOptions().position(busListMaxDist.get(0).latLng)
                                     .icon(BitmapDescriptorFactory
@@ -448,6 +464,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     );
                 } else {
+                    Context context = getApplicationContext();
+                    CharSequence text = "Closest veloh is "+ velohListMaxDist.get(0).distance + " m";
+                    int duration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
                     veloh = velohListMaxDist.get(0);
                     mMap.addMarker(
                             new MarkerOptions().position(veloh.latLng)
@@ -512,6 +534,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     public void onClosestVeloh(View view) {
+        mMap.clear();
         velohWithinMaxDist();
     }
 }
