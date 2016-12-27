@@ -23,6 +23,7 @@ import android.util.Log;
 
 public class AsyncRealTimeBus extends AsyncTask<String, String, String> {
 
+    public AsyncResponse delegate = null;
     private String stationsInfo = "";
     @Override
     protected String doInBackground(String... params) {
@@ -75,8 +76,8 @@ public class AsyncRealTimeBus extends AsyncTask<String, String, String> {
 
     @Override
     protected void onPostExecute(String s) {
-
-        super.onPostExecute(s);
+        delegate.processFinish(s);
+        //super.onPostExecute(s);
 
     }
 }

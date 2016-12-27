@@ -48,7 +48,7 @@ import java.util.Comparator;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, GoogleMap.OnCameraChangeListener, GoogleMap.OnMarkerClickListener {
+        LocationListener, GoogleMap.OnCameraChangeListener, GoogleMap.OnMarkerClickListener, AsyncResponse {
 
 
     private GoogleMap mMap;
@@ -58,6 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationRequest mLocationRequest;
     //Getting the list of stations upon start-up.
     AsyncTaskGetData stations;
+    ArrayList<stationLocations> allStations;
     AsyncTaskGetVeloh velohStations;
     //List that fills according to the camera bounds
     ArrayList<stationLocations> stationsToDisplay = new ArrayList<>();
@@ -121,7 +122,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         //The list of all bus stations.
-        stations = (AsyncTaskGetData) new AsyncTaskGetData().execute("https://api.tfl.lu/stations");
+        stations = new AsyncTaskGetData();
+        stations.delegateForStations = this;
+        stations.execute("https://api.tfl.lu/stations");
         //List of all veloh stations. I used pastebin instead of providing link from jcDecaux with the API key
         // because the API there provides JSON data with latitude as lat and longitude as lng. Since the
         // asyncTaskGetData class works with the names latitude and longitude it seems line a much easier task
@@ -188,8 +191,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         float[] results = new float[1];
                         Projection projection = mMap.getProjection();
                         LatLngBounds bounds = projection.getVisibleRegion().latLngBounds;
-                        for (int i = 0; i < stations.stations.size(); i++) {
-                            stationLocations newStation = stations.stations.get(i);
+                        for (int i = 0; i < allStations.size(); i++) {
+                            stationLocations newStation = allStations.get(i);
                             LatLng position = newStation.latLng;
                             int id = newStation.id;
                             if (bounds.contains(position)) {
@@ -576,6 +579,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         intent.putExtra("stationID", stationID);
         startActivity(intent);
         return true;
+    }
+
+    @Override
+    public void processFinish(String output) {
+
+    }
+
+    @Override
+    public void listProcessFinish(ArrayList<stationLocations> out) {
+        allStations = out;
     }
 }
 

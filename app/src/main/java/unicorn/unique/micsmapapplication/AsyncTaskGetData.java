@@ -25,12 +25,13 @@ import java.util.ArrayList;
  * Created by HolySith on 14-Dec-16.
  */
 // This class is used to fetch data from a URL.
-public class AsyncTaskGetData extends AsyncTask<String, String, String> {
+public class AsyncTaskGetData extends AsyncTask<String, String, ArrayList<stationLocations>> {
 
-    public ArrayList<stationLocations> stations = new ArrayList<>();
+    public AsyncResponse delegateForStations = null;
+    private ArrayList<stationLocations> stations = new ArrayList<>();
 
     @Override
-    protected String doInBackground(String... params) {
+    protected ArrayList<stationLocations> doInBackground(String... params) {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
@@ -60,6 +61,7 @@ public class AsyncTaskGetData extends AsyncTask<String, String, String> {
                     stations.add(new stationLocations(new  LatLng(latitude, longitude),0.0f , id));
 
                 }
+                return stations;
                 //We now return the complete JSON data fetched from the URL.
                 //return buffer.toString();
             } catch (IOException e) {
@@ -77,8 +79,9 @@ public class AsyncTaskGetData extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected void onPostExecute(String fetchedData) {
-        super.onPostExecute(fetchedData);
+    protected void onPostExecute(ArrayList<stationLocations> fetchedData) {
+        delegateForStations.listProcessFinish(fetchedData);
+        //super.onPostExecute(fetchedData);
     }
 
 }

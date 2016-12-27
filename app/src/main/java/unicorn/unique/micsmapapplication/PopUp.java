@@ -9,14 +9,16 @@ import android.os.Bundle;
 import android.content.Intent;
 import android.util.Log;
 
+import java.util.ArrayList;
 
 
 /**
  * Created by HolySith on 26-Dec-16.
  */
 
-public class PopUp extends Activity {
+public class PopUp extends Activity implements AsyncResponse {
 
+    AsyncRealTimeBus asyncRealTimeBus = new AsyncRealTimeBus();
     TextView tv;
 
     @Override
@@ -36,11 +38,18 @@ public class PopUp extends Activity {
 
         String dataAddress= "http://travelplanner.mobiliteit.lu/restproxy/departureBoard?accessId=cdt&id=A=1@L="+stationId+"&format=json";
 
-        AsyncRealTimeBus busDetails = (AsyncRealTimeBus) new AsyncRealTimeBus().execute(dataAddress);
+        asyncRealTimeBus.delegate = this;
+        asyncRealTimeBus.execute(dataAddress);
 
-        TextView textView = (TextView) findViewById(R.id.busText);
-        textView.setText(busDetails.stInfo);
     }
 
+    @Override
+    public void listProcessFinish(ArrayList<stationLocations> out) {
+    }
 
+    @Override
+    public void processFinish(String output) {
+        TextView textView = (TextView) findViewById(R.id.busText);
+        textView.setText(output);
+    }
 }
