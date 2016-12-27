@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Toast;
+import android.net.Uri;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -162,6 +163,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+
+
     // Method of GoogleApiClient.ConnectionCallbacks
     @Override
     public void onConnected(Bundle bundle) {
@@ -182,6 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 onCameraChange(cameraPosition);
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng),16));
                 //Dynamically draw markers on Map.
+
                 mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
                     @Override
                     public void onCameraChange(CameraPosition cameraPosition) {
@@ -256,12 +260,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     busListMaxDist.add(new stationLocations(latlng, results[0], id));
                 }
             }
-            marker = mMap.addMarker(new MarkerOptions()
-                    .position(latlng)
-                    .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.stationinactive)
-                    )
-                    .anchor(0.5f, 0.5f));
+            marker = addMarker(latlng, "stationinactive");
             mHashMap.put(marker.getId(),id);
         }
         Collections.sort(busListMaxDist, new Comparator<stationLocations>() {
@@ -310,6 +309,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    private Marker addMarker(LatLng latLng, String resource){
+        Marker marker;
+        marker = mMap.addMarker(new MarkerOptions()
+                .position(latLng)
+                .icon(BitmapDescriptorFactory
+                        .fromResource(getResources().getIdentifier(resource,"mipmap", "unicorn.unique.micsmapapplication" ))
+                )
+                .anchor(0.5f, 0.5f));
+        return marker;
+    }
     //Method of GoogleApiClient.ConnectionCallbacks
     @Override
     public void onConnectionSuspended(int i) {
@@ -390,12 +399,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (int i = 0; i< stationsToDisplay.size(); i++) {
             stationsToDisp = stationsToDisplay.get(i);
             id = stationsToDisp.id;
-            marker = mMap.addMarker(new MarkerOptions()
-                    .position(stationsToDisp.latLng)
-                    .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.stationinactive)
-                    )
-                    .anchor(0.5f, 0.5f));
+            marker = addMarker(stationsToDisp.latLng, "stationinactive");
             mHashMap.put(marker.getId(), id);
         }
 
@@ -403,14 +407,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (int i = 0; i < busListMaxDist.size(); i++) {
                 if (busListMaxDist.get(i).distance <= compareDistance*25) {
                     id = busListMaxDist.get(i).id;
-                    marker = mMap.addMarker(
-                            new MarkerOptions().position(busListMaxDist.get(i).latLng)
-                                    .icon(BitmapDescriptorFactory
-                                            .fromResource(R.mipmap.stationactive)
-                                    )
-                                    .anchor(0.5f, 0.5f)
-
-                    );
+                    marker = addMarker(busListMaxDist.get(i).latLng, "stationactive");
                     mHashMap.put(marker.getId(), id);
                 } else{
                     Context context = getApplicationContext();
@@ -419,26 +416,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
-                    marker = mMap.addMarker(
-                            new MarkerOptions().position(busListMaxDist.get(0).latLng)
-                                    .icon(BitmapDescriptorFactory
-                                            .fromResource(R.mipmap.stationactive)
-                                    )
-                                    .anchor(0.5f, 0.5f)
-
-                    );
+                    marker = addMarker(busListMaxDist.get(0).latLng, "stationactive");
                     mHashMap.put(marker.getId(), busListMaxDist.get(0).id);
                 }
             }
         }  else {
-            marker = mMap.addMarker(
-                    new MarkerOptions().position(closestStation)
-                            .icon(BitmapDescriptorFactory
-                                    .fromResource(R.mipmap.stationactive)
-                            )
-                            .anchor(0.5f, 0.5f)
-
-            );
+            marker = addMarker(closestStation, "stationactive");
             mHashMap.put(marker.getId(), closestStationId);
         }
 
