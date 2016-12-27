@@ -9,6 +9,10 @@ import com.google.android.gms.maps.model.LatLng;
 public class stationProperties {
     LatLng latLng;
     Float distance;
+    int busNumber;
+    String direction;
+    String time;
+
     //Add other properties here.
 
     public stationProperties(LatLng latLng, Float distance){

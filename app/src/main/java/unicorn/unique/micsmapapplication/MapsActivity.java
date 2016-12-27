@@ -570,9 +570,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public boolean onMarkerClick(Marker marker) {
         String id = marker.getId();
-        int markerId = mHashMap.get(id);
+        int stationID = mHashMap.get(id);
 
-        startActivity(new Intent(MapsActivity.this, PopUp.class));
+        Intent intent = new Intent(MapsActivity.this, PopUp.class);
+        intent.putExtra("stationID", stationID);
+        startActivity(intent);
         return true;
     }
 }
