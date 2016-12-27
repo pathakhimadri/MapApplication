@@ -239,7 +239,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     }
-
+//
     private void drawMarkersForBusStations() {
         mMap.clear();
         float[] results = new float[1];
