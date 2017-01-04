@@ -20,12 +20,13 @@ import java.util.ArrayList;
  * Created by HolySith on 21-Dec-16.
  */
 
-public class AsyncTaskGetVeloh extends AsyncTask<String,String,String>{
+public class AsyncTaskGetVeloh extends AsyncTask<String,String,ArrayList<stationLocations>>{
 
-    public ArrayList<velohProperties> velohStations = new ArrayList<>();
+    public AsyncResponse delegateForVeloh = null;
+    public ArrayList<stationLocations> velohStations = new ArrayList<>();
 
     @Override
-    protected String doInBackground(String... params) {
+    protected ArrayList<stationLocations> doInBackground(String... params) {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
@@ -51,12 +52,10 @@ public class AsyncTaskGetVeloh extends AsyncTask<String,String,String>{
                     JSONObject locationObject = parentObject.getJSONObject("position");
                     double longitude = Double.parseDouble(locationObject.getString("lng"));
                     double latitude = Double.parseDouble(locationObject.getString("lat"));
-                    String name = parentObject.getString("name");
-                    int availableBikes = Integer.parseInt(parentObject.getString("available_bikes"));
-                    int availableStands = Integer.parseInt(parentObject.getString("available_bike_stands"));
-
-                    velohStations.add(new velohProperties(new LatLng(latitude, longitude), name, availableBikes, availableStands,0));
+                    int id = Integer.parseInt(parentObject.getString("number"));
+                    velohStations.add(new stationLocations(new LatLng(latitude ,longitude), 0.0f, id));
                 }
+                return velohStations;
                 //We now return the complete JSON data fetched from the URL.
                 //return buffer.toString();
             } catch (IOException e) {
@@ -73,7 +72,7 @@ public class AsyncTaskGetVeloh extends AsyncTask<String,String,String>{
         return null;
     }
     @Override
-    protected void onPostExecute(String fetchedData) {
-        super.onPostExecute(fetchedData);
+    protected void onPostExecute(ArrayList<stationLocations> fetchedData) {
+        delegateForVeloh.velohlistProcessFinish(fetchedData);
     }
 }

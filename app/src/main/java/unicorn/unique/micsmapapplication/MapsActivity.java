@@ -8,8 +8,6 @@ import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Build;
-import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -58,15 +56,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
     //Getting the list of stations upon start-up.
+
     AsyncTaskGetData stations;
     ArrayList<stationLocations> allStations;
+
     AsyncTaskGetVeloh velohStations;
-    //List that fills according to the camera bounds
+    ArrayList<stationLocations> allVelohLocations;
+
     ArrayList<stationLocations> stationsToDisplay = new ArrayList<>();
-    ArrayList<velohProperties> velohStationsToDisplay = new ArrayList<>();
+    ArrayList<stationLocations> velohStationsToDisplay = new ArrayList<>();
+
     //List of highlighted bus stops based on the slider.
     ArrayList<stationLocations> busListMaxDist = new ArrayList<>();
-    ArrayList<velohProperties> velohListMaxDist = new ArrayList<>();
+    ArrayList<stationLocations> velohListMaxDist = new ArrayList<>();
 
     CameraPosition cameraPosition;
 
@@ -126,11 +128,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         stations = new AsyncTaskGetData();
         stations.delegateForStations = this;
         stations.execute("https://api.tfl.lu/stations");
-        //List of all veloh stations. I used pastebin instead of providing link from jcDecaux with the API key
-        // because the API there provides JSON data with latitude as lat and longitude as lng. Since the
-        // asyncTaskGetData class works with the names latitude and longitude it seems line a much easier task
-        //for now.
-        velohStations = (AsyncTaskGetVeloh) new AsyncTaskGetVeloh().execute("https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47");
+        //Get list of all veloh stations
+        velohStations = new AsyncTaskGetVeloh();
+        velohStations.delegateForVeloh = this;
+        velohStations.execute("https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47");
+
     }
 
     //Implement method of OnMapReady Callback
@@ -144,9 +146,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Manifest.permission.ACCESS_COARSE_LOCATION },
                     12);
             permissionsCheck();
+            Log.w("Enable Location", "Being called on line 145");
             mMap.setMyLocationEnabled(true);
         } else {
+            Log.w("Permission Denied", "Fine location not granted");
             permissionsCheck();
+            Log.w("Enable Location", "Being called on line 150");
             mMap.setMyLocationEnabled(true);
         }
         mMap.setOnMarkerClickListener(this);
@@ -174,16 +179,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         seekBarFunctions();
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             if (mLastLocation != null) {
+
                 double lat = mLastLocation.getLatitude();
                 double lng = mLastLocation.getLongitude();
+
                 onLocationChanged(mLastLocation);
                 cameraPosition = new CameraPosition.Builder().target(new LatLng(lat, lng)).build();
                 onCameraChange(cameraPosition);
-                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng),16));
                 //Dynamically draw markers on Map.
 
                 mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
@@ -210,14 +217,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
 
                         }
-                        for (int i = 0; i < velohStations.velohStations.size(); i++) {
-                            LatLng position = velohStations.velohStations.get(i).latLng;
-                            String name = velohStations.velohStations.get(i).name;
-                            int avBike = velohStations.velohStations.get(i).availableBikes;
-                            int avStands = velohStations.velohStations.get(i).availableStands;
+                        for (int i = 0; i < allVelohLocations.size(); i++) {
+                            stationLocations newStation = allStations.get(i);
+                            LatLng position = newStation.latLng;
+                            int id = newStation.id;
                             Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
                             if (bounds.contains(position)) {
-                                velohStationsToDisplay.add(new velohProperties(position, name, avBike, avStands, results[0]));
+                                velohStationsToDisplay.add(new stationLocations(position, results[0], id));
                                 if(results[0]<closestStationDistance){
                                     closestVelohDistance = results[0];
                                     closestVeloh = position;
@@ -232,6 +238,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             } else {
                 permissionsCheck();
+                Log.w("Enable Location", "Being called on line 239");
                 mMap.setMyLocationEnabled(true);
                 Location newLocation = new Location("");
                 LatLng latlng = new LatLng(49.610456, 6.130668);
@@ -243,7 +250,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     }
-//
+
     private void drawMarkersForBusStations() {
         mMap.clear();
         float[] results = new float[1];
@@ -279,30 +286,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng latlng;
         for (int i = 0; i < velohStationsToDisplay.size(); i++) {
             latlng = velohStationsToDisplay.get(i).latLng;
-            String name = velohStationsToDisplay.get(i).name;
-            int avBike = velohStationsToDisplay.get(i).availableBikes;
-            int avStands = velohStationsToDisplay.get(i).availableStands;
+            int id = velohStationsToDisplay.get(i).id;
             if (mLastLocation != null) {
                 Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),latlng.latitude,latlng.longitude,results);
                 if (results[0] < 250) {
-                    velohListMaxDist.add(new velohProperties(latlng, name,avBike, avStands, results[0]));
+                    velohListMaxDist.add(new stationLocations(latlng, results[0], id));
                     //Log.d("New Closest Veloh", closestVeloh.toString());
                 }
             }
-            mMap.addMarker(
-                    new MarkerOptions().position(latlng)
-                            .icon(BitmapDescriptorFactory
-                                    .fromResource(R.mipmap.velohmarker)
-
-                            )
-                            .anchor(0.5f, 0.5f)
-                    .title(name)
-                    .snippet("Available Bikes: "+ avBike + "\n" + "Available Stands: "+ avStands)
-            );
+            addMarker(latlng, "velohmarker");
         }
-        Collections.sort(velohListMaxDist, new Comparator<velohProperties>() {
+        Collections.sort(velohListMaxDist, new Comparator<stationLocations>() {
             @Override
-            public int compare(velohProperties o1, velohProperties o2) {
+            public int compare(stationLocations o1, stationLocations o2) {
                 return o1.distance.compareTo(o2.distance);
             }
         });
@@ -319,6 +315,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .anchor(0.5f, 0.5f));
         return marker;
     }
+
     //Method of GoogleApiClient.ConnectionCallbacks
     @Override
     public void onConnectionSuspended(int i) {
@@ -374,6 +371,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mGoogleApiClient.connect();
             return;
         }
+        Log.w("Enable Location", "Being called on 382");
         mMap.setMyLocationEnabled(true);
     }
 
@@ -383,14 +381,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawCircle();
 
         for (int i = 0; i< velohStationsToDisplay.size(); i++) {
-            velohProperties veloh = velohStationsToDisplay.get(i);
-            mMap.addMarker(new MarkerOptions()
-                    .position(veloh.latLng)
-                    .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.velohmarker)
-                    ).title(veloh.name)
-                    .snippet("Available Bikes: "+ veloh.availableBikes+ "\n" + "Available Stands: "+ veloh.availableStands)
-                    .anchor(0.5f, 0.5f));
+            stationLocations veloh = velohStationsToDisplay.get(i);
+            addMarker(veloh.latLng, "velohmarker");
         }
 
         stationLocations stationsToDisp;
@@ -412,15 +404,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else{
                     Context context = getApplicationContext();
                     CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
-                    int duration = Toast.LENGTH_SHORT;
-
-                    Toast toast = Toast.makeText(context, text, duration);
+                    Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
                     toast.show();
                     marker = addMarker(busListMaxDist.get(0).latLng, "stationactive");
                     mHashMap.put(marker.getId(), busListMaxDist.get(0).id);
                 }
             }
         }  else {
+
             marker = addMarker(closestStation, "stationactive");
             mHashMap.put(marker.getId(), closestStationId);
         }
@@ -442,60 +433,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         radiusOfSearch = mMap.addCircle(circleOptions);
 
     }
+
     private void velohWithinMaxDist(){
         drawCircle();
 
         for (int i = 0; i< stationsToDisplay.size(); i++) {
-            mMap.addMarker(new MarkerOptions()
-                    .position(stationsToDisplay.get(i).latLng)
-                    .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.stationinactive)
-                    )
-                    .anchor(0.5f, 0.5f));
-
+            stationLocations station = stationsToDisplay.get(i);
+            addMarker(station.latLng, "stationinactive");
         }
+
         for (int i = 0; i< velohStationsToDisplay.size(); i++) {
-            velohProperties veloh = velohStationsToDisplay.get(i);
-            mMap.addMarker(new MarkerOptions()
-                    .position(veloh.latLng)
-                    .icon(BitmapDescriptorFactory
-                            .fromResource(R.mipmap.velohmarker)
-                    ).title(veloh.name)
-                    .snippet("Available Bikes: "+ veloh.availableBikes+ "\n" + "Available Stands: "+ veloh.availableStands)
-                    .anchor(0.5f, 0.5f));
+            stationLocations veloh = velohStationsToDisplay.get(i);
+            addMarker(veloh.latLng, "velohmarker");
         }
         if (velohListMaxDist.size()!=0) {
             for (int i = 0; i < velohListMaxDist.size(); i++) {
-                velohProperties veloh = velohListMaxDist.get(i);
+                stationLocations veloh = velohListMaxDist.get(i);
                 if (velohListMaxDist.get(i).distance <= compareDistance*25) {
-                    mMap.addMarker(
-                            new MarkerOptions().position(veloh.latLng)
-                                    .icon(BitmapDescriptorFactory
-                                            .fromResource(R.mipmap.velohactive)
-                                    )
-                                    .title(veloh.name)
-                                    .snippet("Available Bikes: "+ veloh.availableBikes+ "\n" + "Available Stands: "+ veloh.availableStands)
-                                    .anchor(0.5f, 0.5f)
-
-                    );
+                    addMarker(veloh.latLng, "velohmarker");
                 } else {
                     Context context = getApplicationContext();
                     CharSequence text = "Closest veloh is "+ velohListMaxDist.get(0).distance + " m";
-                    int duration = Toast.LENGTH_SHORT;
 
-                    Toast toast = Toast.makeText(context, text, duration);
+                    Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
                     toast.show();
                     veloh = velohListMaxDist.get(0);
-                    mMap.addMarker(
-                            new MarkerOptions().position(veloh.latLng)
-                                    .icon(BitmapDescriptorFactory
-                                            .fromResource(R.mipmap.velohactive)
-                                    )
-                                    .title(veloh.name)
-                                    .snippet("Available Bikes: "+ veloh.availableBikes+ "\n" + "Available Stands: "+ veloh.availableStands)
-                                    .anchor(0.5f, 0.5f)
-
-                    );
+                    addMarker(veloh.latLng, "velohmarker");
                 }
             }
         }
@@ -572,6 +535,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void listProcessFinish(ArrayList<stationLocations> out) {
         allStations = out;
+    }
+
+    @Override
+    public void velohlistProcessFinish(ArrayList<stationLocations> out) {
+        allVelohLocations = out;
     }
 }
 
