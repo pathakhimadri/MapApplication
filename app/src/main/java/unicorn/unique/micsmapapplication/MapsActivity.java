@@ -145,12 +145,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Manifest.permission.ACCESS_COARSE_LOCATION },
                     12);
             permissionsCheck();
-            Log.w("Enable Location", "Being called on line 145");
             mMap.setMyLocationEnabled(true);
         } else {
-            Log.w("Permission Denied", "Fine location not granted");
             permissionsCheck();
-            Log.w("Enable Location", "Being called on line 150");
             mMap.setMyLocationEnabled(true);
         }
         mMap.setOnMarkerClickListener(this);
@@ -166,8 +163,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mGoogleApiClient.connect();
 
     }
-
-
 
     // Method of GoogleApiClient.ConnectionCallbacks
     @Override
@@ -291,8 +286,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),latlng.latitude,latlng.longitude,results);
                 if (results[0] < 250) {
                     velohListMaxDist.add(new stationLocations(latlng, results[0], id));
-                    //Log.d("New Closest Veloh", closestVeloh.toString());
-                }
+                    }
             }
             addMarker(latlng, "velohmarker");
         }
@@ -401,7 +395,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     id = busListMaxDist.get(i).id;
                     marker = addMarker(busListMaxDist.get(i).latLng, "stationactive");
                     mHashMap.put(marker.getId(), id);
-                } else{
+                } else if(busListMaxDist.size()==1){
                     Context context = getApplicationContext();
                     CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
                     Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
@@ -450,15 +444,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (int i = 0; i < velohListMaxDist.size(); i++) {
                 stationLocations veloh = velohListMaxDist.get(i);
                 if (velohListMaxDist.get(i).distance <= compareDistance*25) {
-                    addMarker(veloh.latLng, "velohmarker");
-                } else {
+                    addMarker(veloh.latLng, "velohactive");
+                } else if(velohListMaxDist.size()==1) {
                     Context context = getApplicationContext();
                     CharSequence text = "Closest veloh is "+ velohListMaxDist.get(0).distance + " m";
 
                     Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
                     toast.show();
                     veloh = velohListMaxDist.get(0);
-                    addMarker(veloh.latLng, "velohmarker");
+                    addMarker(veloh.latLng, "velohactive");
                 }
             }
         }
@@ -529,7 +523,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void processFinish(String output) {
-
     }
 
     @Override
