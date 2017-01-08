@@ -48,6 +48,11 @@ public class PopUp extends Activity implements AsyncResponse {
     }
 
     @Override
+    public void velohlistProcessFinish(ArrayList<stationLocations> out) {
+
+    }
+
+    @Override
     public void processFinish(String output) {
         TextView textView = (TextView) findViewById(R.id.busText);
         textView.setText(output);

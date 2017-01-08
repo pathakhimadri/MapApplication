@@ -42,31 +42,19 @@ public class AsyncTaskGetData extends AsyncTask<String, String, ArrayList<statio
                 urlConnection.connect();
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 reader = new BufferedReader(new InputStreamReader(in));
-                StringBuffer buffer = new StringBuffer();
 
                 String line = "";
                 while((line = reader.readLine()) !=null){
-                    buffer.append(line);
+                    Double lng = Double.parseDouble(line.split(";")[0].replace(",","."));
+                    Double lat = Double.parseDouble(line.split(";")[1].replace(",","."));
+                    int id = Integer.parseInt(line.split(";")[2]);
+                    stations.add(new stationLocations(new LatLng(lat,lng), 0.0f , id));
                 }
-                //Save the buffer value into a string.
-                String JSONData = buffer.toString();
-                JSONArray parentArray = new JSONArray(JSONData);
 
-                for(int i =0; i< parentArray.length(); i++) {
-
-                    JSONObject parentObject = parentArray.getJSONObject(i);
-                    double longitude = Double.parseDouble(parentObject.getString("longitude"));
-                    double latitude = Double.parseDouble(parentObject.getString("latitude"));
-                    int id = Integer.parseInt(parentObject.getString("id"));
-                    stations.add(new stationLocations(new  LatLng(latitude, longitude),0.0f , id));
-
-                }
                 return stations;
                 //We now return the complete JSON data fetched from the URL.
                 //return buffer.toString();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
                 e.printStackTrace();
             } finally {
                 urlConnection.disconnect();

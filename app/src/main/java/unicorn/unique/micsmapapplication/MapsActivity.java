@@ -127,12 +127,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //The list of all bus stations.
         stations = new AsyncTaskGetData();
         stations.delegateForStations = this;
-        stations.execute("https://api.tfl.lu/stations");
+        stations.execute("http://travelplanner.mobiliteit.lu/hafas/query.exe/dot?performLocating=2&tpl=stop2csv&look_maxdist=150000&look_x=6112550&look_y=49610700&stationProxy=yes.txt");
         //Get list of all veloh stations
         velohStations = new AsyncTaskGetVeloh();
         velohStations.delegateForVeloh = this;
         velohStations.execute("https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47");
-
     }
 
     //Implement method of OnMapReady Callback
@@ -218,7 +217,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         }
                         for (int i = 0; i < allVelohLocations.size(); i++) {
-                            stationLocations newStation = allStations.get(i);
+                            stationLocations newStation = allVelohLocations.get(i);
                             LatLng position = newStation.latLng;
                             int id = newStation.id;
                             Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
@@ -284,9 +283,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //double distToClosestVeloh = 10000000;
         float[] results = new float[1];
         LatLng latlng;
+        int id;
         for (int i = 0; i < velohStationsToDisplay.size(); i++) {
             latlng = velohStationsToDisplay.get(i).latLng;
-            int id = velohStationsToDisplay.get(i).id;
+             id = velohStationsToDisplay.get(i).id;
             if (mLastLocation != null) {
                 Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),latlng.latitude,latlng.longitude,results);
                 if (results[0] < 250) {
@@ -541,5 +541,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void velohlistProcessFinish(ArrayList<stationLocations> out) {
         allVelohLocations = out;
     }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
 }
 
