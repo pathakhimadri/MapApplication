@@ -47,15 +47,16 @@ public class AsyncRealTimeBus extends AsyncTask<String, String, String> {
                 String JSONData = buffer.toString();
                 JSONObject parentObject = new JSONObject(JSONData);
                 JSONArray parent = parentObject.getJSONArray("Departure");
+                String stationName = parent.getJSONObject(0).getString("stop");
+                stationsInfo+= "<b>"+stationName+"</b>"+"<br /><br />";
                 for(int i =0; i< parent.length(); i++) {
-
                     JSONObject child = parent.getJSONObject(i);
                     String name = child.getString("name");
                     String time = child.getString("time");
                     String direction = child.getString("direction");
 
-                    stationsInfo += "Name: "+ name + "\nTime: " + time+ "\nDestination: "+ direction +"\n";
-                    stationsInfo += "\n";
+                    stationsInfo += "Number: "+ name + "<br />Time: " + time+ "<br />Destination: "+ direction +"<br />";
+                    stationsInfo += "<br />";
                 }
                 return stationsInfo;
                 //We now return the complete JSON data fetched from the URL.
@@ -77,7 +78,6 @@ public class AsyncRealTimeBus extends AsyncTask<String, String, String> {
     @Override
     protected void onPostExecute(String s) {
         delegate.processFinish(s);
-        //super.onPostExecute(s);
 
     }
 }

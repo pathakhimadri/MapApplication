@@ -105,8 +105,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static boolean deleteDir(File dir){
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
+            for (String aChildren : children) {
+                boolean success = deleteDir(new File(dir, aChildren));
                 if (!success) {
                     return false;
                 }
@@ -218,7 +218,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
                             if (bounds.contains(position)) {
                                 velohStationsToDisplay.add(new stationLocations(position, results[0], id));
-                                if(results[0]<closestStationDistance){
+                                if(results[0]<closestVelohDistance){
                                     closestVelohDistance = results[0];
                                     closestVeloh = position;
                                 }
@@ -264,18 +264,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             marker = addMarker(latlng, "stationinactive");
             mHashMap.put(marker.getId(),id);
         }
+        //If there are no bus stations within 250m (the search distance, then add the closest one)
+        if(busListMaxDist.size()==0){
+            busListMaxDist.add(new stationLocations(closestStation, closestStationDistance, closestStationId));
+        }
         Collections.sort(busListMaxDist, new Comparator<stationLocations>() {
             @Override
             public int compare(stationLocations o1, stationLocations o2) {
                 return o1.distance.compareTo(o2.distance);
             }
         });
-
     }
 
     private void drawMarkersForVelohStation() {
-        //velohStationsToDisplay.clear();
-        //double distToClosestVeloh = 10000000;
         float[] results = new float[1];
         LatLng latlng;
         int id;
@@ -286,7 +287,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),latlng.latitude,latlng.longitude,results);
                 if (results[0] < 250) {
                     velohListMaxDist.add(new stationLocations(latlng, results[0], id));
-                    }
+                }
             }
             addMarker(latlng, "velohmarker");
         }
@@ -296,6 +297,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return o1.distance.compareTo(o2.distance);
             }
         });
+
+    }
+
+    public void findClosest(View view) {
+        mMap.clear();
+        mHashMap.clear();
+        drawCircle();
+
+        for (int i = 0; i< velohStationsToDisplay.size(); i++) {
+            stationLocations veloh = velohStationsToDisplay.get(i);
+            addMarker(veloh.latLng, "velohmarker");
+        }
+
+        stationLocations stationsToDisp;
+        int id;
+        Marker marker;
+
+        //First since map is cleared, draw all the markers again.
+        for (int i = 0; i< stationsToDisplay.size(); i++) {
+            stationsToDisp = stationsToDisplay.get(i);
+            id = stationsToDisp.id;
+            marker = addMarker(stationsToDisp.latLng, "stationinactive");
+            mHashMap.put(marker.getId(), id);
+        }
+
+        int numberOfBusesInPerimeter = 0;
+        //Add the markers whose distance fit the queried distance.
+        if (busListMaxDist.size()!=0) {
+            for (int i = 0; i < busListMaxDist.size(); i++) {
+                if (busListMaxDist.get(i).distance <= compareDistance * 25) {
+                    id = busListMaxDist.get(i).id;
+                    marker = addMarker(busListMaxDist.get(i).latLng, "stationactive");
+                    mHashMap.put(marker.getId(), id);
+                    numberOfBusesInPerimeter++;
+                }
+            }
+            if(numberOfBusesInPerimeter==0) {
+                marker = addMarker(closestStation, "stationactive");
+                mHashMap.put(marker.getId(), closestStationId);
+                Context context = getApplicationContext();
+                CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
+                Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+                toast.show();
+                marker = addMarker(busListMaxDist.get(0).latLng, "stationactive");
+                mHashMap.put(marker.getId(), busListMaxDist.get(0).id);
+
+            }
+        }
 
     }
 
@@ -369,48 +418,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
     }
 
-    public void findClosest(View view) {
-        mMap.clear();
-        mHashMap.clear();
-        drawCircle();
 
-        for (int i = 0; i< velohStationsToDisplay.size(); i++) {
-            stationLocations veloh = velohStationsToDisplay.get(i);
-            addMarker(veloh.latLng, "velohmarker");
-        }
-
-        stationLocations stationsToDisp;
-        int id;
-        Marker marker;
-        for (int i = 0; i< stationsToDisplay.size(); i++) {
-            stationsToDisp = stationsToDisplay.get(i);
-            id = stationsToDisp.id;
-            marker = addMarker(stationsToDisp.latLng, "stationinactive");
-            mHashMap.put(marker.getId(), id);
-        }
-
-        if (busListMaxDist.size()!=0) {
-            for (int i = 0; i < busListMaxDist.size(); i++) {
-                if (busListMaxDist.get(i).distance <= compareDistance*25) {
-                    id = busListMaxDist.get(i).id;
-                    marker = addMarker(busListMaxDist.get(i).latLng, "stationactive");
-                    mHashMap.put(marker.getId(), id);
-                } else if(busListMaxDist.size()==1){
-                    Context context = getApplicationContext();
-                    CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
-                    Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
-                    toast.show();
-                    marker = addMarker(busListMaxDist.get(0).latLng, "stationactive");
-                    mHashMap.put(marker.getId(), busListMaxDist.get(0).id);
-                }
-            }
-        }  else {
-
-            marker = addMarker(closestStation, "stationactive");
-            mHashMap.put(marker.getId(), closestStationId);
-        }
-
-    }
 
     private void drawCircle(){
         if(radiusOfSearch != null) {

@@ -1,7 +1,11 @@
 package unicorn.unique.micsmapapplication;
 
 import android.app.Activity;
+import android.graphics.Typeface;
 import android.support.v4.view.ScrollingView;
+import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.util.DisplayMetrics;
@@ -10,6 +14,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 /**
@@ -55,6 +60,7 @@ public class PopUp extends Activity implements AsyncResponse {
     @Override
     public void processFinish(String output) {
         TextView textView = (TextView) findViewById(R.id.busText);
-        textView.setText(output);
+        textView.setText(Html.fromHtml(output));
     }
+
 }
