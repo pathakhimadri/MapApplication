@@ -5,6 +5,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -184,52 +185,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 onLocationChanged(mLastLocation);
                 cameraPosition = new CameraPosition.Builder().target(new LatLng(lat, lng)).build();
-                onCameraChange(cameraPosition);
                 //Dynamically draw markers on Map.
 
                 mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
                     @Override
                     public void onCameraChange(CameraPosition cameraPosition) {
-                        if(radiusOfSearch != null) {
-                            radiusOfSearch.remove();
-                        }
-                        float[] results = new float[1];
-                        Projection projection = mMap.getProjection();
-                        LatLngBounds bounds = projection.getVisibleRegion().latLngBounds;
-                        for (int i = 0; i < allStations.size(); i++) {
-                            stationLocations newStation = allStations.get(i);
-                            LatLng position = newStation.latLng;
-                            int id = newStation.id;
-                            if (bounds.contains(position)) {
-                                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
-                                stationsToDisplay.add(new stationLocations(position, results[0], id));
-                                if(results[0]<closestStationDistance){
-                                    closestStationDistance = results[0];
-                                    closestStation = position;
-                                    closestStationId = id;
-                                }
-                            }
-
-                        }
-                        for (int i = 0; i < allVelohLocations.size(); i++) {
-                            stationLocations newStation = allVelohLocations.get(i);
-                            LatLng position = newStation.latLng;
-                            int id = newStation.id;
-                            Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
-                            if (bounds.contains(position)) {
-                                velohStationsToDisplay.add(new stationLocations(position, results[0], id));
-                                if(results[0]<closestVelohDistance){
-                                    closestVelohDistance = results[0];
-                                    closestVeloh = position;
-                                }
-                            }
-                        }
-                        drawMarkersForBusStations();
-                        drawMarkersForVelohStation();
-
+                        cameraChanged();
                     }
                 });
-
             } else {
                 permissionsCheck();
                 Log.w("Enable Location", "Being called on line 239");
@@ -243,6 +206,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         }
+    }
+    //TODO: Check why the bounds are not updating upon orientation change!
+
+    private void cameraChanged(){
+        if(radiusOfSearch != null) {
+            radiusOfSearch.remove();
+        }
+
+        float[] results = new float[1];
+        Projection projection = mMap.getProjection();
+        LatLngBounds bounds = projection.getVisibleRegion().latLngBounds;
+        Log.d("Bounds", bounds.toString());
+        for (int i = 0; i < allStations.size(); i++) {
+            stationLocations newStation = allStations.get(i);
+            LatLng position = newStation.latLng;
+            int id = newStation.id;
+            if (bounds.contains(position)) {
+                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
+                stationsToDisplay.add(new stationLocations(position, results[0], id));
+                if(results[0]<closestStationDistance){
+                    closestStationDistance = results[0];
+                    closestStation = position;
+                    closestStationId = id;
+                }
+            }
+
+        }
+        for (int i = 0; i < allVelohLocations.size(); i++) {
+            stationLocations newStation = allVelohLocations.get(i);
+            LatLng position = newStation.latLng;
+            int id = newStation.id;
+            Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), position.latitude, position.longitude, results);
+            if (bounds.contains(position)) {
+                velohStationsToDisplay.add(new stationLocations(position, results[0], id));
+                if(results[0]<closestVelohDistance){
+                    closestVelohDistance = results[0];
+                    closestVeloh = position;
+                }
+            }
+        }
+        drawMarkersForBusStations();
+        drawMarkersForVelohStation();
     }
 
     private void drawMarkersForBusStations() {
@@ -464,7 +469,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         }
-
     }
 
     @Override
@@ -477,10 +481,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 }
-
-    @Override
-    public void onCameraChange(CameraPosition cameraPosition) {
-    }
 
     private void seekBarFunctions(){
         seekBar = (SeekBar) findViewById(R.id.distanceSeek);
@@ -511,7 +511,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-
 
     public void onClosestVeloh(View view) {
         mMap.clear();
@@ -562,5 +561,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onStop();
     }
 
-}
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
 
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d("Configuration","CHANGED!!!");
+        cameraChanged();
+    }
+}
