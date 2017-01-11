@@ -60,7 +60,12 @@ public class PopUp extends Activity implements AsyncResponse {
     @Override
     public void processFinish(String output) {
         TextView textView = (TextView) findViewById(R.id.busText);
-        textView.setText(Html.fromHtml(output));
+        if(output!=null) {
+            textView.setText(Html.fromHtml(output));
+        }else{
+            output ="No data to display.";
+            textView.setText(output);
+        }
     }
 
 }
