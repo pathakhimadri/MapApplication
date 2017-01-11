@@ -243,6 +243,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if(results[0]<closestVelohDistance){
                     closestVelohDistance = results[0];
                     closestVeloh = position;
+                    closestVelohId = id;
                 }
             }
         }
@@ -284,6 +285,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void drawMarkersForVelohStation() {
         float[] results = new float[1];
         LatLng latlng;
+        Marker marker;
         int id;
         for (int i = 0; i < velohStationsToDisplay.size(); i++) {
             latlng = velohStationsToDisplay.get(i).latLng;
@@ -294,7 +296,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     velohListMaxDist.add(new stationLocations(latlng, results[0], id));
                 }
             }
-            addMarker(latlng, "velohmarker");
+            marker = addMarker(latlng, "velohmarker");
+            mHashMap.put(marker.getId(),id);
+        }
+        if(velohListMaxDist.size()==0){
+            velohListMaxDist.add(new stationLocations(closestVeloh, closestVelohDistance,closestVelohId));
         }
         Collections.sort(velohListMaxDist, new Comparator<stationLocations>() {
             @Override
@@ -302,7 +308,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return o1.distance.compareTo(o2.distance);
             }
         });
-
     }
 
     public void findClosest(View view) {
@@ -339,14 +344,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
             if(numberOfBusesInPerimeter==0) {
-                marker = addMarker(closestStation, "stationactive");
-                mHashMap.put(marker.getId(), closestStationId);
                 Context context = getApplicationContext();
                 CharSequence text = "Closest bus is "+ busListMaxDist.get(0).distance + " m";
                 Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
                 toast.show();
                 marker = addMarker(busListMaxDist.get(0).latLng, "stationactive");
                 mHashMap.put(marker.getId(), busListMaxDist.get(0).id);
+
+            }
+        }
+
+    }
+
+    public void onClosestVeloh(View view) {
+        mMap.clear();
+        mHashMap.clear();
+        drawCircle();
+
+        for (int i = 0; i< stationsToDisplay.size(); i++) {
+            stationLocations bus = stationsToDisplay.get(i);
+            addMarker(bus.latLng, "stationinactive");
+        }
+
+        stationLocations stationsToDisp;
+        int id;
+        Marker marker;
+
+        //First since map is cleared, draw all the markers again.
+        for (int i = 0; i< velohStationsToDisplay.size(); i++) {
+            stationsToDisp = velohStationsToDisplay.get(i);
+            id = stationsToDisp.id;
+            marker = addMarker(stationsToDisp.latLng, "velohmarker");
+            mHashMap.put(marker.getId(), id);
+        }
+
+        int numberOfVelohInPerimeter = 0;
+        if (velohListMaxDist.size()!=0) {
+            for (int i = 0; i < velohListMaxDist.size(); i++) {
+                if (velohListMaxDist.get(i).distance <= compareDistance * 25) {
+                    id = velohListMaxDist.get(i).id;
+                    marker = addMarker(velohListMaxDist.get(i).latLng, "velohactive");
+                    mHashMap.put(marker.getId(), id);
+                    numberOfVelohInPerimeter++;
+                }
+            }
+            if(numberOfVelohInPerimeter==0) {
+               Context context = getApplicationContext();
+                CharSequence text = "Closest Veloh! is "+ velohListMaxDist.get(0).distance + " m";
+                Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+                toast.show();
+                marker = addMarker(velohListMaxDist.get(0).latLng, "velohactive");
+                mHashMap.put(marker.getId(), velohListMaxDist.get(0).id);
 
             }
         }
@@ -512,20 +560,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    public void onClosestVeloh(View view) {
-        mMap.clear();
-        velohWithinMaxDist();
-    }
+
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        String id = marker.getId();
-        int stationID = mHashMap.get(id);
+        try {
+            String id = marker.getId();
+            int stationID = mHashMap.get(id);
 
-        Intent intent = new Intent(MapsActivity.this, PopUp.class);
-        intent.putExtra("stationID", stationID);
-        startActivity(intent);
-        return true;
+            Intent intent = new Intent(MapsActivity.this, PopUp.class);
+            intent.putExtra("stationID", stationID);
+            startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
@@ -540,6 +590,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void velohlistProcessFinish(ArrayList<stationLocations> out) {
         allVelohLocations = out;
+    }
+
+    @Override
+    public void velohRTProcessFinish(String output) {
+
     }
 
     @Override
@@ -564,12 +619,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
 
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        Log.d("Configuration","CHANGED!!!");
-        cameraChanged();
     }
 }

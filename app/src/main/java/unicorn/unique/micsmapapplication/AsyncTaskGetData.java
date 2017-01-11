@@ -1,15 +1,8 @@
 package unicorn.unique.micsmapapplication;
 
-import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Debug;
-import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -21,9 +14,6 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-/**
- * Created by HolySith on 14-Dec-16.
- */
 // This class is used to fetch data from a URL.
 public class AsyncTaskGetData extends AsyncTask<String, String, ArrayList<stationLocations>> {
 

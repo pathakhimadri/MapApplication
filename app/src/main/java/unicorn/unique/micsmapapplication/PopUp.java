@@ -24,6 +24,7 @@ import java.util.Locale;
 public class PopUp extends Activity implements AsyncResponse {
 
     AsyncRealTimeBus asyncRealTimeBus = new AsyncRealTimeBus();
+    AsyncRealTimeVeloh asyncRealTimeVeloh = new AsyncRealTimeVeloh();
     TextView tv;
 
     @Override
@@ -39,12 +40,21 @@ public class PopUp extends Activity implements AsyncResponse {
         int width = dm.widthPixels;
         int height = dm.heightPixels;
 
-        getWindow().setLayout((int)(width*0.8), (int)(height*0.7));
 
-        String dataAddress= "http://travelplanner.mobiliteit.lu/restproxy/departureBoard?accessId=cdt&id=A=1@L="+stationId+"&format=json";
+        String dataAddress;
+        if(stationId>1000) {
+            getWindow().setLayout((int)(width*0.8), (int)(height*0.5));
+            dataAddress = "http://travelplanner.mobiliteit.lu/restproxy/departureBoard?accessId=cdt&id=A=1@L=" + stationId + "&format=json";
+            asyncRealTimeBus.delegate = this;
+            asyncRealTimeBus.execute(dataAddress);
+        }else{
+            getWindow().setLayout((int)(width*0.8), (int)(height*0.15));
+            dataAddress = "https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47";
+            asyncRealTimeVeloh.delegate = this;
+            asyncRealTimeVeloh.execute(dataAddress,Integer.toString(stationId));
 
-        asyncRealTimeBus.delegate = this;
-        asyncRealTimeBus.execute(dataAddress);
+        }
+
 
     }
 
@@ -55,6 +65,17 @@ public class PopUp extends Activity implements AsyncResponse {
     @Override
     public void velohlistProcessFinish(ArrayList<stationLocations> out) {
 
+    }
+
+    @Override
+    public void velohRTProcessFinish(String output) {
+        TextView textView = (TextView) findViewById(R.id.busText);
+        if(output!=null) {
+            textView.setText(Html.fromHtml(output));
+        }else{
+            output ="No data to display.";
+            textView.setText(output);
+        }
     }
 
     @Override

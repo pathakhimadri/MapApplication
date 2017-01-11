@@ -40,7 +40,6 @@
             <SeekBar android:id="@+id/distanceSeek"
                 android:layout_width="match_parent"
                 android:layout_height="20dp"
-                android:layout_weight = "0.4"
                 android:layout_alignParentTop="true"
                 android:layout_margin="10dp"
                 android:max = "10"
@@ -48,18 +47,17 @@
 
             <RelativeLayout
                 android:orientation="horizontal"
-                android:layout_height="50dp"
+                android:layout_height="70dp"
                 android:layout_width="match_parent"
                 android:layout_alignParentBottom="true"
-                android:layout_weight = "0.6"
                 android:gravity="center"
                 >
 
                 <Button
                     android:id="@+id/button7"
                     android:padding="2dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_width="150dp"
+                    android:layout_height="50dp"
                     android:layout_gravity="center"
                     android:background="@color/colorAccent"
                     android:layout_marginRight="10dp"
@@ -70,11 +68,11 @@
 
                 <Button android:id="@+id/veloh"
                     android:padding="5dp"
-                    android:layout_width="wrap_content"
+                    android:layout_width="150dp"
                     android:layout_gravity="center"
                     android:layout_alignBottom="@+id/button7"
                     android:layout_toRightOf="@+id/button7"
-                    android:layout_height="match_parent"
+                    android:layout_height="50dp"
                     android:text="Find Closest Veloh"
                     android:background="@color/colorPrimary"
                     android:onClick="onClosestVeloh"

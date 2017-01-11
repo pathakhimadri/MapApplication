@@ -9,4 +9,5 @@ public interface AsyncResponse {
     void processFinish(String output);
     void listProcessFinish(ArrayList<stationLocations> out);
     void velohlistProcessFinish(ArrayList<stationLocations> out);
+    void velohRTProcessFinish(String output);
 }
