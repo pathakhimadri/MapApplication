@@ -1,12 +1,15 @@
 package unicorn.unique.micsmapapplication;
 
+import java.io.IOException;
 import java.util.HashMap;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
@@ -14,8 +17,11 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Toast;
 import android.net.Uri;
@@ -44,6 +50,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -92,6 +99,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //HashMap that holds a MARKER and it's id.
     private HashMap<String, Integer> mHashMap = new HashMap<>();
 
+    //Handling configuration Changes.
+
     public static void clearCache(Context context){
         try {
             File dir = context.getCacheDir();
@@ -133,6 +142,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         velohStations = new AsyncTaskGetVeloh();
         velohStations.delegateForVeloh = this;
         velohStations.execute("https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47");
+        if(savedInstanceState!=null){
+            cameraChanged();
+        }
     }
 
     //Implement method of OnMapReady Callback
@@ -197,8 +209,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 permissionsCheck();
                 Log.w("Enable Location", "Being called on line 239");
                 mMap.setMyLocationEnabled(true);
+
                 Location newLocation = new Location("");
                 LatLng latlng = new LatLng(49.610456, 6.130668);
+
                 newLocation.setLatitude(latlng.latitude);
                 newLocation.setLongitude(latlng.longitude);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 16));
@@ -252,7 +266,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void drawMarkersForBusStations() {
-        mMap.clear();
+
         float[] results = new float[1];
         //Log.d("Markers", "draw markers for Bus being called");
         LatLng latlng;
@@ -620,4 +634,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onCameraChange(CameraPosition cameraPosition) {
 
     }
+
+    public void geoLocate(View view) throws IOException {
+
+        EditText editText = (EditText) findViewById(R.id.editText);
+        try {
+            String searchedLocation = editText.getText().toString();
+
+            //Takes the text location and converts it into LAT and LONG
+            Geocoder geocoder = new Geocoder(this);
+
+            //Where 1 is the number of results to return. We will need a few more later on.
+            List<Address> list = geocoder.getFromLocationName(searchedLocation, 1);
+            android.location.Address address = list.get(0);
+
+            //This part is not needed however it looks pretty neat.
+            String locality = address.getLocality();
+
+            Toast.makeText(this, locality, Toast.LENGTH_SHORT).show();
+
+            double lat = address.getLatitude();
+            double lng = address.getLongitude();
+
+            LatLng ll = new LatLng(lat, lng);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ll, 15));
+        } catch (IndexOutOfBoundsException e) {
+
+        }
+    }
+
 }

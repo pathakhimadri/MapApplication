@@ -48,7 +48,7 @@ public class PopUp extends Activity implements AsyncResponse {
             asyncRealTimeBus.delegate = this;
             asyncRealTimeBus.execute(dataAddress);
         }else{
-            getWindow().setLayout((int)(width*0.8), (int)(height*0.15));
+            getWindow().setLayout((int)(width*0.8), (int)(height*0.2));
             dataAddress = "https://api.jcdecaux.com/vls/v1/stations?contract=Luxembourg&apiKey=d3369fd018b460c87544a5f04f0937a41e669a47";
             asyncRealTimeVeloh.delegate = this;
             asyncRealTimeVeloh.execute(dataAddress,Integer.toString(stationId));

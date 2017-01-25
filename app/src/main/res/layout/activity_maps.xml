@@ -97,11 +97,12 @@
         android:layout_toStartOf="@+id/button" />
 
     <Button
-        android:text="Button"
+        android:text="Search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:id="@+id/button"
+        android:onClick="geoLocate"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/editText" />
