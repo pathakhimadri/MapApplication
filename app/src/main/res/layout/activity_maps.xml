@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="unicorn.unique.micsmapapplication.MapsActivity"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="47dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
@@ -82,29 +82,37 @@
         </RelativeLayout>
         </LinearLayout>
     </fragment>
-
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_alignParentTop="true"
+        >
     <EditText
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
-        android:ems="10"
-        android:layout_alignParentTop="true"
         android:id="@+id/editText"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:hint="Where do you want to go.."
-        android:layout_toLeftOf="@+id/button"
-        android:layout_toStartOf="@+id/button" />
+        />
 
     <Button
         android:text="Search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_width="0dp"
+        android:layout_weight="0.275"
+        android:layout_height="match_parent"
         android:id="@+id/button"
         android:onClick="geoLocate"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@+id/editText" />
-
+        android:layout_marginBottom="5dp"
+         />
+    <Button
+        android:text="❤"
+        android:layout_width="0dp"
+        android:layout_weight="0.125"
+        android:layout_height="wrap_content"
+        android:id="@+id/user_hist"
+        android:layout_marginBottom="5dp"
+        />
+    </LinearLayout>
 </RelativeLayout>

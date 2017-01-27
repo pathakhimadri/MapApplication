@@ -3,6 +3,10 @@ package unicorn.unique.micsmapapplication;
 import java.io.IOException;
 import java.util.HashMap;
 import android.Manifest;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,6 +17,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Debug;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -45,6 +50,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 
 import java.io.File;
@@ -56,7 +63,8 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, GoogleMap.OnCameraChangeListener, GoogleMap.OnMarkerClickListener, AsyncResponse {
+        LocationListener, GoogleMap.OnCameraChangeListener, GoogleMap.OnMarkerClickListener,
+        AsyncResponse,GoogleMap.OnMapLongClickListener, RoutingListener  {
 
 
     private GoogleMap mMap;
@@ -96,6 +104,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     float closestVelohDistance;
     int closestVelohId;
+
+    private ArrayList<Polyline> polylines;
 
     //HashMap that holds a MARKER and it's id.
     private HashMap<String, Integer> mHashMap = new HashMap<>();
@@ -165,6 +175,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.setMyLocationEnabled(true);
         }
         mMap.setOnMarkerClickListener(this);
+        mMap.setOnMapLongClickListener(this);
     }
 
     //Permissions check
@@ -203,6 +214,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
                     @Override
                     public void onCameraChange(CameraPosition cameraPosition) {
+                        float minZoom = 14.5f;
+                        if(cameraPosition.zoom < minZoom){
+                            mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+                        }
                         cameraChanged();
                     }
                 });
@@ -546,8 +561,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
-
     @Override
     public boolean onMarkerClick(Marker marker) {
         try {
@@ -635,4 +648,58 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        traceRoute(mLastLocation,latLng);
+    }
+
+    private void traceRoute(Location mLastLocation, LatLng destination){
+        Routing routing = new Routing.Builder()
+                .travelMode(Routing.TravelMode.WALKING)
+                .withListener(this)
+                .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), destination)
+                .build();
+
+        // execute the request
+        routing.execute();
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+        // remove the previous polylines
+        if (polylines != null && polylines.size() > 0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        // create a new array of polylines
+        polylines = new ArrayList<>();
+
+        // select the shortest path
+        Route path = route.get(shortestRouteIndex);
+
+        // add polylines to the map and the array
+        PolylineOptions polyOptions = new PolylineOptions();
+        polyOptions.color(0x92303F9F);
+        polyOptions.width(13);
+        polyOptions.addAll(path.getPoints());
+        Polyline polyline = mMap.addPolyline(polyOptions);
+        polylines.add(polyline);
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
 }

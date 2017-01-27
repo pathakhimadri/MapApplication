@@ -1,7 +1,12 @@
 package unicorn.unique.micsmapapplication;
 
+import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
+import com.google.android.gms.fitness.data.Application;
+import com.google.android.gms.games.appcontent.AppContentAction;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
@@ -21,13 +26,16 @@ import java.net.URL;
  */
 
 public class AsyncRealTimeVeloh extends AsyncTask<String, String, String> {
+
     public AsyncResponse delegate = null;
     private String velohInfo = "";
 
     @Override
     protected String doInBackground(String... params) {
+
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
+
 
         try {
             URL stationsURL = new URL(params[0]);
@@ -51,12 +59,13 @@ public class AsyncRealTimeVeloh extends AsyncTask<String, String, String> {
                     int id = Integer.parseInt(parentObject.getString("number"));
                     if(id == Integer.parseInt(params[1])){
                         String velohStationName = parentObject.getString("name");
+
                         String address = parentObject.getString("address");
                         Integer bike_stands = Integer.parseInt(parentObject.getString("bike_stands"));
                         Integer available_bike_stands = Integer.parseInt(parentObject.getString("available_bike_stands"));
                         Integer available_bikes = Integer.parseInt(parentObject.getString("available_bikes"));
                         velohInfo = "<b>" + velohStationName + "</b>" + "<br />"
-                                    + "<i>"+ address + "</i>" + "<br />"
+                                    + "<i>"+ address + "</i>" + "<br />" + "<br />"
                                     + "Available Bikes: " + available_bikes + "<br />"
                                     + "Available Bike Stands: " + available_bike_stands + "/" + bike_stands;
                     }
